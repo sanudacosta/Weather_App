@@ -1,5 +1,4 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
 class StorageService {
   static const String _favoriteCitiesKey = 'favorite_cities';

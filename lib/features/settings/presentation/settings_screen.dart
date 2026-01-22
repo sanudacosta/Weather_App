@@ -81,7 +81,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     value: _isDarkMode,
-                    activeColor: Colors.white,
+                    activeTrackColor: Colors.white,
                     onChanged: (value) async {
                       setState(() {
                         _isDarkMode = value;

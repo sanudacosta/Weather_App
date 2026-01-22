@@ -6,10 +6,11 @@ class ApiConstants {
   
   // Add your API key here
   static const String apiKey = 'YOUR_API_KEY_HERE';
+  
+  static const int requestTimeout = 30;
 }
 
 // App Constants
 class AppConstants {
   static const String appName = 'Weather App';
-  static const int requestTimeout = 30;
 }

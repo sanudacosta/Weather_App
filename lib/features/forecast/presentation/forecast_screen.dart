@@ -48,7 +48,7 @@ class ForecastScreen extends StatelessWidget {
                   return const LoadingWidget(message: 'Loading forecast...');
                   
                 case ForecastState.error:
-                  return ErrorWidget(
+                  return WeatherErrorWidget(
                     message: viewModel.errorMessage ?? 'An error occurred',
                     onRetry: () => viewModel.fetchForecast(cityName),
                   );

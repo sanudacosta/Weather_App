@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return const LoadingWidget(message: 'Loading weather data...');
         
       case WeatherState.error:
-        return ErrorWidget(
+        return WeatherErrorWidget(
           message: viewModel.errorMessage ?? 'An error occurred',
           onRetry: () {
             if (_searchController.text.isNotEmpty) {

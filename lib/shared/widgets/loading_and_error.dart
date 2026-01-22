@@ -30,11 +30,11 @@ class LoadingWidget extends StatelessWidget {
   }
 }
 
-class ErrorWidget extends StatelessWidget {
+class WeatherErrorWidget extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
   
-  const ErrorWidget({
+  const WeatherErrorWidget({
     super.key,
     required this.message,
     this.onRetry,
