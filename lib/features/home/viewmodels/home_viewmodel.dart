@@ -70,16 +70,19 @@ class HomeViewModel extends ChangeNotifier {
   
   Future<void> loadLastSearchedCity() async {
     final lastCity = await _storageService.getLastSearchedCity();
-    if (lastCity != null && lastCity.isNotEmpty) {
-      await fetchWeatherByCity(lastCity);
-    }
+    final cityToLoad = (lastCity != null && lastCity.isNotEmpty) 
+        ? lastCity 
+        : 'Colombo';
+    await fetchWeatherByCity(cityToLoad);
   }
   
   String _parseError(String error) {
     if (error.contains('City not found')) {
       return 'City not found. Please check the name and try again.';
-    } else if (error.contains('Network error')) {
-      return 'Network error. Please check your internet connection.';
+    } else if (error.contains('Network error') || error.contains('Failed to load')) {
+      return 'Network error. Please check your internet connection and API key.';
+    } else if (error.contains('401') || error.contains('Invalid API key')) {
+      return 'Invalid API key. Please add a valid OpenWeatherMap API key.';
     } else if (error.contains('Location')) {
       return 'Unable to get your location. Please enable location services.';
     } else {

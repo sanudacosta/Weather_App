@@ -4,8 +4,9 @@ class ApiConstants {
   static const String weatherEndpoint = '/weather';
   static const String forecastEndpoint = '/forecast';
   
-  // Add your API key here
-  static const String apiKey = 'YOUR_API_KEY_HERE';
+  // Add your API key here from: https://openweathermap.org/api
+  // Get a free API key and replace the value below
+  static const String apiKey = 'bd5e378503939ddaee76f12ad7a97608';
   
   static const int requestTimeout = 30;
 }
@@ -13,4 +14,5 @@ class ApiConstants {
 // App Constants
 class AppConstants {
   static const String appName = 'Weather App';
+  static const String defaultCity = 'Colombo';
 }
