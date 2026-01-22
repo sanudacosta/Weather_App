@@ -80,21 +80,36 @@ class HomeViewModel extends ChangeNotifier {
     _state = WeatherState.loading;
     notifyListeners();
 
-    // Try to load weather by current location with 5 second timeout
+    // Try to load weather by current location with 3 second timeout
     try {
-      await fetchWeatherByLocation().timeout(const Duration(seconds: 5));
+      await fetchWeatherByLocation().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          throw Exception('Location timeout');
+        },
+      );
     } catch (e) {
       // Location failed or timed out, load last searched city or Colombo
-      final lastCity = await _storageService.getLastSearchedCity();
-      final cityToLoad =
-          (lastCity != null && lastCity.isNotEmpty) ? lastCity : 'Colombo';
-      await fetchWeatherByCity(cityToLoad);
+      try {
+        final lastCity = await _storageService.getLastSearchedCity();
+        final cityToLoad =
+            (lastCity != null && lastCity.isNotEmpty) ? lastCity : 'Colombo';
+        await fetchWeatherByCity(cityToLoad);
+      } catch (error) {
+        // If everything fails, set error state
+        _state = WeatherState.error;
+        _errorMessage =
+            'Failed to load weather data. Please check your internet connection.';
+        notifyListeners();
+      }
     }
   }
 
   String _parseError(String error) {
     if (error.contains('City not found')) {
       return 'City not found. Please check the name and try again.';
+    } else if (error.contains('429') || error.contains('rate limit')) {
+      return 'API rate limit exceeded. Please wait a few minutes or get a new API key from openweathermap.org';
     } else if (error.contains('Network error') ||
         error.contains('Failed to load')) {
       return 'Network error. Please check your internet connection and API key.';

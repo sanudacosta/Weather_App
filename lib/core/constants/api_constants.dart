@@ -6,7 +6,7 @@ class ApiConstants {
   
   // Add your API key here from: https://openweathermap.org/api
   // Get a free API key and replace the value below
-  static const String apiKey = 'bd5e378503939ddaee76f12ad7a97608';
+  static const String apiKey = '35e0b0fa6a082f91ade962ac8cb197b3';
   
   static const int requestTimeout = 30;
 }

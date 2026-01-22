@@ -20,8 +20,12 @@ class ApiService {
       
       if (response.statusCode == 200) {
         return json.decode(response.body) as Map<String, dynamic>;
+      } else if (response.statusCode == 401) {
+        throw Exception('Invalid API key');
       } else if (response.statusCode == 404) {
         throw Exception('City not found');
+      } else if (response.statusCode == 429) {
+        throw Exception('API rate limit exceeded');
       } else {
         throw Exception('Failed to load weather data');
       }
@@ -46,6 +50,10 @@ class ApiService {
       
       if (response.statusCode == 200) {
         return json.decode(response.body) as Map<String, dynamic>;
+      } else if (response.statusCode == 401) {
+        throw Exception('Invalid API key');
+      } else if (response.statusCode == 429) {
+        throw Exception('API rate limit exceeded');
       } else {
         throw Exception('Failed to load weather data');
       }
@@ -67,8 +75,12 @@ class ApiService {
       
       if (response.statusCode == 200) {
         return json.decode(response.body) as Map<String, dynamic>;
+      } else if (response.statusCode == 401) {
+        throw Exception('Invalid API key');
       } else if (response.statusCode == 404) {
         throw Exception('City not found');
+      } else if (response.statusCode == 429) {
+        throw Exception('API rate limit exceeded');
       } else {
         throw Exception('Failed to load forecast data');
       }
@@ -93,6 +105,10 @@ class ApiService {
       
       if (response.statusCode == 200) {
         return json.decode(response.body) as Map<String, dynamic>;
+      } else if (response.statusCode == 401) {
+        throw Exception('Invalid API key');
+      } else if (response.statusCode == 429) {
+        throw Exception('API rate limit exceeded');
       } else {
         throw Exception('Failed to load forecast data');
       }

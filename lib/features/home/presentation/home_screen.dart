@@ -153,8 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFF1A237E),
-                      const Color(0xFF283593),
+                      Colors.blue.shade400,
+                      Colors.blue.shade600,
                     ],
                   ),
                 ),
