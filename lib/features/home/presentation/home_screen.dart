@@ -8,7 +8,7 @@ import '../../settings/presentation/settings_screen.dart';
 import '../../../shared/widgets/gradient_background.dart';
 import '../../../shared/widgets/weather_card.dart';
 import '../../../shared/widgets/weather_info_tile.dart';
-import '../../../shared/widgets/search_bar.dart' as custom;
+import '../../../shared/widgets/search_bar_with_autocomplete.dart';
 import '../../../shared/widgets/loading_and_error.dart';
 import '../../../core/utils/weather_helper.dart';
 
@@ -108,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             body: Column(
               children: [
-                custom.SearchBar(
+                SearchBarWithAutocomplete(
                   controller: _searchController,
                   onSearch: (city) {
                     viewModel.fetchWeatherByCity(city);
@@ -175,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   Widget _buildWeatherContent(weather) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: 24, left: 16, right: 16),
       child: Column(
         children: [
           const SizedBox(height: 20),
@@ -186,6 +186,12 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.white,
               fontSize: 32,
               fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  color: Colors.black45,
+                  blurRadius: 8,
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
@@ -205,24 +211,43 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.white,
                     fontSize: 72,
                     fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black45,
+                        blurRadius: 8,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   weather.weatherDescription.toUpperCase(),
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 18,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.2,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black45,
+                        blurRadius: 6,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Feels like ${weather.feelsLike.round()}°',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black45,
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -268,36 +293,39 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
           
           // Forecast button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ForecastScreen(
-                      cityName: weather.cityName,
-                      weatherCondition: weather.weatherCondition,
-                    ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ForecastScreen(
+                    cityName: weather.cityName,
+                    weatherCondition: weather.weatherCondition,
                   ),
-                );
-              },
-              icon: const Icon(Icons.calendar_today),
-              label: const Text('5-Day Forecast'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.2),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
                 ),
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1.5,
-                  ),
+              );
+            },
+            icon: const Icon(Icons.calendar_today),
+            label: const Text(
+              '5-Day Forecast',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white.withOpacity(0.25),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 16,
+              ),
+              minimumSize: const Size(double.infinity, 54),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: Colors.white.withOpacity(0.4),
+                  width: 1.5,
                 ),
               ),
             ),
@@ -336,9 +364,16 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
+          style: const TextStyle(
+            color: Colors.white,
             fontSize: 14,
+            fontWeight: FontWeight.w500,
+            shadows: [
+              Shadow(
+                color: Colors.black45,
+                blurRadius: 4,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),
@@ -348,6 +383,12 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
+            shadows: [
+              Shadow(
+                color: Colors.black45,
+                blurRadius: 4,
+              ),
+            ],
           ),
         ),
       ],

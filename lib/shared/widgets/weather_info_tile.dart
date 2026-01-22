@@ -19,7 +19,7 @@ class WeatherInfoTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.black.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -33,10 +33,16 @@ class WeatherInfoTile extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 12,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
+              shadows: [
+                Shadow(
+                  color: Colors.black45,
+                  blurRadius: 4,
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 4),
@@ -46,6 +52,12 @@ class WeatherInfoTile extends StatelessWidget {
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  color: Colors.black45,
+                  blurRadius: 4,
+                ),
+              ],
             ),
           ),
         ],
