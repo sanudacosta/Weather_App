@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../../forecast/presentation/forecast_screen.dart';
+import '../../favorites/presentation/favorites_screen.dart';
+import '../../favorites/viewmodels/favorites_viewmodel.dart';
+import '../../settings/presentation/settings_screen.dart';
 import '../../../shared/widgets/gradient_background.dart';
 import '../../../shared/widgets/weather_card.dart';
 import '../../../shared/widgets/weather_info_tile.dart';
@@ -56,15 +59,49 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.favorite_border, color: Colors.white),
+                  icon: Icon(
+                    viewModel.weather != null &&
+                            context.watch<FavoritesViewModel>().isFavorite(viewModel.weather!.cityName)
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: Colors.white,
+                  ),
                   onPressed: () {
-                    // TODO: Navigate to favorites
+                    if (viewModel.weather != null) {
+                      final favViewModel = context.read<FavoritesViewModel>();
+                      final cityName = viewModel.weather!.cityName;
+                      
+                      if (favViewModel.isFavorite(cityName)) {
+                        favViewModel.removeFavorite(cityName);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('$cityName removed from favorites')),
+                        );
+                      } else {
+                        favViewModel.addFavorite(cityName);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('$cityName added to favorites')),
+                        );
+                      }
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChangeNotifierProvider.value(
+                            value: context.read<FavoritesViewModel>(),
+                            child: const FavoritesScreen(),
+                          ),
+                        ),
+                      );
+                    }
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.settings, color: Colors.white),
                   onPressed: () {
-                    // TODO: Navigate to settings
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    );
                   },
                 ),
               ],

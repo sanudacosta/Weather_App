@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/home/presentation/home_screen.dart';
 import 'features/home/viewmodels/home_viewmodel.dart';
+import 'features/favorites/viewmodels/favorites_viewmodel.dart';
 
 void main() {
   runApp(const WeatherApp());
@@ -16,6 +17,7 @@ class WeatherApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => FavoritesViewModel()),
       ],
       child: MaterialApp(
         title: 'Weather App',
