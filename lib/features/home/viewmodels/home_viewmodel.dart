@@ -9,23 +9,23 @@ enum WeatherState { initial, loading, loaded, error }
 class HomeViewModel extends ChangeNotifier {
   final WeatherRepository _repository;
   final StorageService _storageService;
-  
+
   HomeViewModel({
     WeatherRepository? repository,
     StorageService? storageService,
   })  : _repository = repository ?? WeatherRepository(),
         _storageService = storageService ?? StorageService();
-  
+
   WeatherState _state = WeatherState.initial;
   Weather? _weather;
   Forecast? _forecast;
   String? _errorMessage;
-  
+
   WeatherState get state => _state;
   Weather? get weather => _weather;
   Forecast? get forecast => _forecast;
   String? get errorMessage => _errorMessage;
-  
+
   Future<void> fetchWeatherByCity(String city) async {
     if (city.trim().isEmpty) {
       _errorMessage = 'Please enter a city name';
@@ -33,11 +33,11 @@ class HomeViewModel extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    
+
     _state = WeatherState.loading;
     _errorMessage = null;
     notifyListeners();
-    
+
     try {
       _weather = await _repository.getWeatherByCity(city);
       _forecast = await _repository.getForecastByCity(city);
@@ -50,15 +50,15 @@ class HomeViewModel extends ChangeNotifier {
       _weather = null;
       _forecast = null;
     }
-    
+
     notifyListeners();
   }
-  
+
   Future<void> fetchWeatherByLocation() async {
     _state = WeatherState.loading;
     _errorMessage = null;
     notifyListeners();
-    
+
     try {
       _weather = await _repository.getWeatherByLocation();
       _forecast = await _repository.getForecastByLocation();
@@ -70,23 +70,33 @@ class HomeViewModel extends ChangeNotifier {
       _errorMessage = _parseError(e.toString());
       _weather = null;
       _forecast = null;
+      rethrow;
     }
-    
+
     notifyListeners();
   }
-  
+
   Future<void> loadLastSearchedCity() async {
-    final lastCity = await _storageService.getLastSearchedCity();
-    final cityToLoad = (lastCity != null && lastCity.isNotEmpty) 
-        ? lastCity 
-        : 'Colombo';
-    await fetchWeatherByCity(cityToLoad);
+    _state = WeatherState.loading;
+    notifyListeners();
+
+    // Try to load weather by current location with 5 second timeout
+    try {
+      await fetchWeatherByLocation().timeout(const Duration(seconds: 5));
+    } catch (e) {
+      // Location failed or timed out, load last searched city or Colombo
+      final lastCity = await _storageService.getLastSearchedCity();
+      final cityToLoad =
+          (lastCity != null && lastCity.isNotEmpty) ? lastCity : 'Colombo';
+      await fetchWeatherByCity(cityToLoad);
+    }
   }
-  
+
   String _parseError(String error) {
     if (error.contains('City not found')) {
       return 'City not found. Please check the name and try again.';
-    } else if (error.contains('Network error') || error.contains('Failed to load')) {
+    } else if (error.contains('Network error') ||
+        error.contains('Failed to load')) {
       return 'Network error. Please check your internet connection and API key.';
     } else if (error.contains('401') || error.contains('Invalid API key')) {
       return 'Invalid API key. Please add a valid OpenWeatherMap API key.';

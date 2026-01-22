@@ -87,6 +87,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.my_location, color: Colors.white, size: 26),
+            onPressed: () {
+              viewModel.fetchWeatherByLocation();
+            },
+          ),
           Consumer<FavoritesViewModel>(
             builder: (context, favViewModel, child) {
               final isFavorite = viewModel.weather != null &&

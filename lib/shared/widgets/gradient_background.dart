@@ -1,15 +1,38 @@
 import 'package:flutter/material.dart';
 
-class GradientBackground extends StatelessWidget {
+class GradientBackground extends StatefulWidget {
   final Widget child;
   final String weatherCondition;
-  
+
   const GradientBackground({
     super.key,
     required this.child,
     this.weatherCondition = 'clear',
   });
-  
+
+  @override
+  State<GradientBackground> createState() => _GradientBackgroundState();
+}
+
+class _GradientBackgroundState extends State<GradientBackground>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 10),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   List<Color> _getGradientColors(String condition) {
     switch (condition.toLowerCase()) {
       case 'clear':
@@ -55,18 +78,28 @@ class GradientBackground extends StatelessWidget {
         ];
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: _getGradientColors(weatherCondition),
-        ),
-      ),
-      child: child,
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: _getGradientColors(widget.weatherCondition),
+              stops: [
+                0.0,
+                0.5 + (_controller.value * 0.2),
+                1.0,
+              ],
+            ),
+          ),
+          child: widget.child,
+        );
+      },
     );
   }
 }
