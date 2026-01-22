@@ -53,12 +53,15 @@ class _SearchBarWithAutocompleteState extends State<SearchBarWithAutocomplete> {
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.5),
-              width: 1.5,
-            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -66,19 +69,19 @@ class _SearchBarWithAutocompleteState extends State<SearchBarWithAutocomplete> {
                 child: TextField(
                   controller: widget.controller,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black87,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Search city...',
                     hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.grey.shade500,
                       fontSize: 16,
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.search,
-                      color: Colors.white,
+                      color: Colors.grey.shade700,
                     ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
@@ -99,7 +102,7 @@ class _SearchBarWithAutocompleteState extends State<SearchBarWithAutocomplete> {
                 Container(
                   margin: const EdgeInsets.only(right: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.blue.shade400,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: IconButton(

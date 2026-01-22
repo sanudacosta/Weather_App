@@ -15,14 +15,11 @@ class WeatherCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.25),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.4),
-          width: 1.5,
-        ),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.15),
@@ -31,13 +28,8 @@ class WeatherCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: padding ?? const EdgeInsets.all(20),
-          child: child,
-        ),
-      ),
+      padding: padding ?? const EdgeInsets.all(20),
+      child: child,
     );
   }
 }
