@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Consumer<FavoritesViewModel>(
         builder: (context, favViewModel, child) {
           return Column(
@@ -195,12 +195,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     children: [
                       Icon(Icons.favorite,
-                          color: Colors.grey.shade600, size: 18),
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withOpacity(0.6),
+                          size: 18),
                       const SizedBox(width: 8),
                       Text(
                         'Favorite Cities',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withOpacity(0.6),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 1,
@@ -218,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: ListTile(
@@ -229,13 +238,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: Text(
                             city,
                             style: TextStyle(
-                              color: Colors.grey.shade800,
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge?.color,
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           trailing: Icon(Icons.arrow_forward_ios,
-                              color: Colors.grey.shade400, size: 16),
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.color
+                                  ?.withOpacity(0.4),
+                              size: 16),
                           onTap: () {
                             Navigator.pop(context);
                             Provider.of<HomeViewModel>(context, listen: false)
@@ -255,12 +270,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.favorite_border,
-                            color: Colors.grey.shade300, size: 48),
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.color
+                                ?.withOpacity(0.3),
+                            size: 48),
                         const SizedBox(height: 12),
                         Text(
                           'No favorite cities yet',
                           style: TextStyle(
-                            color: Colors.grey.shade400,
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.color
+                                ?.withOpacity(0.4),
                             fontSize: 14,
                           ),
                         ),
@@ -273,7 +297,8 @@ class _HomeScreenState extends State<HomeScreen> {
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Divider(color: Colors.grey.shade200, thickness: 1),
+                child: Divider(
+                    color: Theme.of(context).dividerColor, thickness: 1),
               ),
 
               // Navigation Menu
@@ -365,19 +390,30 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                Icon(icon, color: Colors.grey.shade700, size: 22),
+                Icon(icon,
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.color
+                        ?.withOpacity(0.7),
+                    size: 22),
                 const SizedBox(width: 16),
                 Text(
                   title,
                   style: TextStyle(
-                    color: Colors.grey.shade800,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const Spacer(),
                 Icon(Icons.arrow_forward_ios,
-                    color: Colors.grey.shade300, size: 14),
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.color
+                        ?.withOpacity(0.3),
+                    size: 14),
               ],
             ),
           ),
