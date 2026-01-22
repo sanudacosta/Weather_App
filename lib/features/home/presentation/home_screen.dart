@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../../favorites/viewmodels/favorites_viewmodel.dart';
-import '../../forecast/presentation/forecast_screen.dart';
+import '../../settings/presentation/settings_screen.dart';
 import '../../../shared/widgets/gradient_background.dart';
 import '../../../shared/widgets/loading_and_error.dart';
 import '../../../core/utils/weather_helper.dart';
+import '../../../data/services/city_autocomplete_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final viewModel = Provider.of<HomeViewModel>(context, listen: false);
       viewModel.loadLastSearchedCity();
+      final favViewModel = Provider.of<FavoritesViewModel>(context, listen: false);
+      favViewModel.loadFavorites();
     });
   }
 
@@ -40,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
           extendBodyBehindAppBar: true,
           drawer: _buildDrawer(context),
           body: GradientBackground(
+            weatherCondition: viewModel.weather?.weatherCondition ?? 'clear',
             child: SafeArea(
               child: Column(
                 children: [
@@ -78,8 +82,42 @@ class _HomeScreenState extends State<HomeScreen> {
               fontWeight: FontWeight.w500,
             ),
           ),
+          const Spacer(),
+          Consumer<FavoritesViewModel>(
+            builder: (context, favViewModel, child) {
+              final isFavorite = viewModel.weather != null && 
+                  favViewModel.favoriteCities.contains(viewModel.weather!.cityName);
+              return IconButton(
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                onPressed: viewModel.weather == null ? null : () async {
+                  if (isFavorite) {
+                    await favViewModel.removeFavorite(viewModel.weather!.cityName);
+                  } else {
+                    await favViewModel.addFavorite(viewModel.weather!.cityName);
+                  }
+                },
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white, size: 28),
+            onPressed: () => _showSearchDialog(context, viewModel),
+          ),
         ],
       ),
+    );
+  }
+
+  void _showSearchDialog(BuildContext context, HomeViewModel viewModel) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _SearchBottomSheet(viewModel: viewModel),
     );
   }
 
@@ -94,23 +132,10 @@ class _HomeScreenState extends State<HomeScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.search, color: Colors.white, size: 28),
-                      onPressed: () {
-                        // Show search dialog
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.settings, color: Colors.white, size: 28),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        // Navigate to settings
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                      icon: const Icon(Icons.close, color: Colors.white, size: 28),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -151,10 +176,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
-                    // Navigate to manage locations
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white.withOpacity(0.3),
@@ -164,8 +194,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Manage locations',
+                  icon: const Icon(Icons.settings),
+                  label: const Text(
+                    'Settings',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -204,11 +235,12 @@ class _HomeScreenState extends State<HomeScreen> {
         );
 
       case WeatherState.loaded:
-        return _buildWeatherContent(viewModel.weather!);
+        return _buildWeatherContent(viewModel);
     }
   }
 
-  Widget _buildWeatherContent(weather) {
+  Widget _buildWeatherContent(HomeViewModel viewModel) {
+    final weather = viewModel.weather!;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -275,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.black.withOpacity(0.4),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
@@ -291,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 24),
           
           // Hourly forecast section
-          _buildHourlyForecast(weather),
+          _buildHourlyForecast(viewModel),
           
           const SizedBox(height: 24),
           
@@ -301,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 24),
           
           // Daily forecast
-          _buildDailyForecast(weather),
+          _buildDailyForecast(viewModel),
           
           const SizedBox(height: 24),
         ],
@@ -309,16 +341,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHourlyForecast(weather) {
-    // Simulated hourly data (in real app, this would come from API)
-    final hours = ['1:30 pm', '2:30 pm', '3:30 pm', '4:30 pm', '5:30 pm', '6:10 pm'];
-    final temps = [25, 24, 24, 23, 22, 0]; // 0 for sunset
-    final rain = [0, 1, 1, 1, 2, 0];
+  Widget _buildHourlyForecast(HomeViewModel viewModel) {
+    final forecast = viewModel.forecast;
+    if (forecast == null || forecast.items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Get next 6 hourly forecasts (3-hour intervals)
+    final hourlyItems = forecast.items.take(6).toList();
     
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.25),
+        color: Colors.black.withOpacity(0.4),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -327,13 +362,19 @@ class _HomeScreenState extends State<HomeScreen> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: List.generate(hours.length, (index) {
+              children: List.generate(hourlyItems.length, (index) {
+                final item = hourlyItems[index];
+                final hour = item.dateTime.hour;
+                final minute = item.dateTime.minute;
+                final period = hour >= 12 ? 'pm' : 'am';
+                final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+                
                 return SizedBox(
                   width: 80,
                   child: Column(
                     children: [
                       Text(
-                        hours[index],
+                        '$displayHour:${minute.toString().padLeft(2, '0')} $period',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -341,14 +382,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        index == hours.length - 1 
-                            ? '🌅' 
-                            : WeatherHelper.getWeatherIcon(weather.weatherCondition),
+                        WeatherHelper.getWeatherIcon(item.weatherCondition),
                         style: const TextStyle(fontSize: 32),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        index == hours.length - 1 ? 'Sunset' : '${temps[index]}°',
+                        '${item.temperature.round()}°',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -368,8 +407,10 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(
             height: 60,
             child: CustomPaint(
-              size: Size(hours.length * 80.0, 60),
-              painter: _TemperatureGraphPainter(temps.take(5).toList().cast<int>()),
+              size: Size(hourlyItems.length * 80.0, 60),
+              painter: _TemperatureGraphPainter(
+                hourlyItems.map((item) => item.temperature.round()).toList(),
+              ),
             ),
           ),
           
@@ -379,7 +420,8 @@ class _HomeScreenState extends State<HomeScreen> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: List.generate(hours.length, (index) {
+              children: List.generate(hourlyItems.length, (index) {
+                final item = hourlyItems[index];
                 return SizedBox(
                   width: 80,
                   child: Row(
@@ -388,7 +430,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const Icon(Icons.water_drop, color: Colors.white70, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        '${rain[index]}%',
+                        '${(item.pop * 100).round()}%',
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 12,
@@ -409,7 +451,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.25),
+        color: Colors.black.withOpacity(0.4),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -453,19 +495,61 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDailyForecast(weather) {
-    final days = ['Yesterday', 'Today', 'Friday'];
-    final maxTemps = [25, 26, 27];
-    final minTemps = [14, 16, 19];
-    final rainChance = [0, 5, 24];
+  Widget _buildDailyForecast(HomeViewModel viewModel) {
+    final forecast = viewModel.forecast;
+    if (forecast == null || forecast.items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Group by day and get daily summaries
+    final dailyForecasts = <String, List<dynamic>>{}; 
+    for (var item in forecast.items) {
+      final dateKey = '${item.dateTime.year}-${item.dateTime.month}-${item.dateTime.day}';
+      if (!dailyForecasts.containsKey(dateKey)) {
+        dailyForecasts[dateKey] = [];
+      }
+      dailyForecasts[dateKey]!.add(item);
+    }
+
+    final days = dailyForecasts.keys.take(5).toList();
+    final now = DateTime.now();
     
     return Column(
-      children: List.generate(days.length, (index) {
+      children: List.generate(days.length.clamp(0, 5), (index) {
+        final dateKey = days[index];
+        final items = dailyForecasts[dateKey]!;
+        final firstItem = items[0];
+        final date = firstItem.dateTime;
+        
+        // Calculate day label
+        String dayLabel;
+        if (date.year == now.year && date.month == now.month) {
+          if (date.day == now.day) {
+            dayLabel = 'Today';
+          } else if (date.day == now.day - 1) {
+            dayLabel = 'Yesterday';
+          } else if (date.day == now.day + 1) {
+            dayLabel = 'Tomorrow';
+          } else {
+            dayLabel = _getDayName(date.weekday);
+          }
+        } else {
+          dayLabel = _getDayName(date.weekday);
+        }
+        
+        // Calculate max/min temps from all items in the day
+        final temps = items.map((item) => item.temperature).toList();
+        final maxTemp = temps.reduce((a, b) => a > b ? a : b);
+        final minTemp = temps.reduce((a, b) => a < b ? a : b);
+        
+        // Calculate average rain chance
+        final avgRain = items.map((item) => item.pop).reduce((a, b) => a + b) / items.length;
+        
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.25),
+            color: Colors.black.withOpacity(0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -473,7 +557,7 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(
                 width: 100,
                 child: Text(
-                  days[index],
+                  dayLabel,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -481,13 +565,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              if (rainChance[index] > 0) ...[
+              if (avgRain > 0.1) ...[
                 const Icon(Icons.water_drop, color: Colors.white70, size: 16),
                 const SizedBox(width: 4),
                 SizedBox(
                   width: 40,
                   child: Text(
-                    '${rainChance[index]}%',
+                    '${(avgRain * 100).round()}%',
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
@@ -498,15 +582,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 60),
               const Spacer(),
               Text(
-                WeatherHelper.getWeatherIcon(weather.weatherCondition),
+                WeatherHelper.getWeatherIcon(firstItem.weatherCondition),
                 style: const TextStyle(fontSize: 28),
               ),
               const SizedBox(width: 12),
-              if (index == 2) 
-                const Text('⛈️', style: TextStyle(fontSize: 28)),
               const Spacer(),
               Text(
-                '${maxTemps[index]}° ${minTemps[index]}°',
+                '${maxTemp.round()}° ${minTemp.round()}°',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -518,6 +600,11 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }),
     );
+  }
+
+  String _getDayName(int weekday) {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return days[weekday - 1];
   }
 }
 
@@ -570,4 +657,159 @@ class _TemperatureGraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// Search Bottom Sheet Widget
+class _SearchBottomSheet extends StatefulWidget {
+  final HomeViewModel viewModel;
+
+  const _SearchBottomSheet({required this.viewModel});
+
+  @override
+  State<_SearchBottomSheet> createState() => _SearchBottomSheetState();
+}
+
+class _SearchBottomSheetState extends State<_SearchBottomSheet> {
+  final TextEditingController _controller = TextEditingController();
+  final CityAutocompleteService _autocompleteService = CityAutocompleteService();
+  List<dynamic> _suggestions = [];
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _searchCities(String query) async {
+    if (query.length < 2) {
+      setState(() => _suggestions = []);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final results = await _autocompleteService.searchCities(query);
+      setState(() {
+        _suggestions = results;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _suggestions = [];
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.blue.shade400,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  const Text(
+                    'Search City',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: TextField(
+                controller: _controller,
+                autofocus: true,
+                style: const TextStyle(color: Colors.black87),
+                decoration: InputDecoration(
+                  hintText: 'Enter city name...',
+                  hintStyle: const TextStyle(color: Colors.black54),
+                  filled: true,
+                  fillColor: Colors.white,
+                  prefixIcon: const Icon(Icons.search, color: Colors.black54),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onChanged: _searchCities,
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    widget.viewModel.fetchWeatherByCity(value);
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+            ),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            if (_suggestions.isNotEmpty)
+              LimitedBox(
+                maxHeight: 300,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _suggestions.length,
+                  itemBuilder: (context, index) {
+                    final city = _suggestions[index];
+                    return ListTile(
+                      leading: const Icon(Icons.location_on, color: Colors.white),
+                      title: Text(
+                        city.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${city.state ?? ''} ${city.country}',
+                        style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                      ),
+                      onTap: () {
+                        widget.viewModel.fetchWeatherByCity(city.name);
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
 }

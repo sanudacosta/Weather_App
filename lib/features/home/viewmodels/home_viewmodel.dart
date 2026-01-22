@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../data/models/weather.dart';
+import '../../../data/models/forecast.dart';
 import '../../../data/repositories/weather_repository.dart';
 import '../../../data/services/storage_service.dart';
 
@@ -17,10 +18,12 @@ class HomeViewModel extends ChangeNotifier {
   
   WeatherState _state = WeatherState.initial;
   Weather? _weather;
+  Forecast? _forecast;
   String? _errorMessage;
   
   WeatherState get state => _state;
   Weather? get weather => _weather;
+  Forecast? get forecast => _forecast;
   String? get errorMessage => _errorMessage;
   
   Future<void> fetchWeatherByCity(String city) async {
@@ -37,6 +40,7 @@ class HomeViewModel extends ChangeNotifier {
     
     try {
       _weather = await _repository.getWeatherByCity(city);
+      _forecast = await _repository.getForecastByCity(city);
       await _storageService.saveLastSearchedCity(city);
       _state = WeatherState.loaded;
       _errorMessage = null;
@@ -44,6 +48,7 @@ class HomeViewModel extends ChangeNotifier {
       _state = WeatherState.error;
       _errorMessage = _parseError(e.toString());
       _weather = null;
+      _forecast = null;
     }
     
     notifyListeners();
@@ -56,6 +61,7 @@ class HomeViewModel extends ChangeNotifier {
     
     try {
       _weather = await _repository.getWeatherByLocation();
+      _forecast = await _repository.getForecastByLocation();
       await _storageService.saveLastSearchedCity(_weather!.cityName);
       _state = WeatherState.loaded;
       _errorMessage = null;
@@ -63,6 +69,7 @@ class HomeViewModel extends ChangeNotifier {
       _state = WeatherState.error;
       _errorMessage = _parseError(e.toString());
       _weather = null;
+      _forecast = null;
     }
     
     notifyListeners();

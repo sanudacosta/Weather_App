@@ -13,6 +13,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final StorageService _storageService = StorageService();
   bool _isDarkMode = false;
+  bool _isCelsius = true;
   
   @override
   void initState() {
@@ -22,8 +23,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   
   Future<void> _loadSettings() async {
     final isDark = await _storageService.isDarkMode();
+    final isCelsius = await _storageService.isCelsius();
     setState(() {
       _isDarkMode = isDark;
+      _isCelsius = isCelsius;
     });
   }
   
@@ -87,6 +90,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _isDarkMode = value;
                       });
                       await _storageService.setThemeMode(value);
+                    },
+                  ),
+                  const Divider(color: Colors.white24, height: 32),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Temperature Unit',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _isCelsius ? 'Celsius (°C)' : 'Fahrenheit (°F)',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 14,
+                      ),
+                    ),
+                    value: _isCelsius,
+                    activeTrackColor: Colors.white,
+                    onChanged: (value) async {
+                      setState(() {
+                        _isCelsius = value;
+                      });
+                      await _storageService.setTemperatureUnit(value);
                     },
                   ),
                 ],

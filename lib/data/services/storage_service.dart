@@ -4,6 +4,7 @@ class StorageService {
   static const String _favoriteCitiesKey = 'favorite_cities';
   static const String _lastSearchedCityKey = 'last_searched_city';
   static const String _themeKey = 'theme_mode';
+  static const String _temperatureUnitKey = 'temperature_unit';
   
   Future<List<String>> getFavoriteCities() async {
     final prefs = await SharedPreferences.getInstance();
@@ -46,5 +47,15 @@ class StorageService {
   Future<void> setThemeMode(bool isDark) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_themeKey, isDark);
+  }
+  
+  Future<bool> isCelsius() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_temperatureUnitKey) ?? true; // Default to Celsius
+  }
+  
+  Future<void> setTemperatureUnit(bool isCelsius) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_temperatureUnitKey, isCelsius);
   }
 }
