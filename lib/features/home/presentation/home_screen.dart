@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../../favorites/viewmodels/favorites_viewmodel.dart';
 import '../../settings/presentation/settings_screen.dart';
+import '../../forecast/presentation/detailed_forecast_screen.dart';
+import '../../favorites/presentation/favorite_cities_screen.dart';
+import '../../map/presentation/weather_map_screen.dart';
 import '../../../shared/widgets/gradient_background.dart';
 import '../../../shared/widgets/loading_and_error.dart';
 import '../../../core/utils/weather_helper.dart';
@@ -24,7 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final viewModel = Provider.of<HomeViewModel>(context, listen: false);
       viewModel.loadLastSearchedCity();
-      final favViewModel = Provider.of<FavoritesViewModel>(context, listen: false);
+      final favViewModel =
+          Provider.of<FavoritesViewModel>(context, listen: false);
       favViewModel.loadFavorites();
     });
   }
@@ -85,21 +89,26 @@ class _HomeScreenState extends State<HomeScreen> {
           const Spacer(),
           Consumer<FavoritesViewModel>(
             builder: (context, favViewModel, child) {
-              final isFavorite = viewModel.weather != null && 
-                  favViewModel.favoriteCities.contains(viewModel.weather!.cityName);
+              final isFavorite = viewModel.weather != null &&
+                  favViewModel.favoriteCities
+                      .contains(viewModel.weather!.cityName);
               return IconButton(
                 icon: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border,
                   color: Colors.white,
                   size: 28,
                 ),
-                onPressed: viewModel.weather == null ? null : () async {
-                  if (isFavorite) {
-                    await favViewModel.removeFavorite(viewModel.weather!.cityName);
-                  } else {
-                    await favViewModel.addFavorite(viewModel.weather!.cityName);
-                  }
-                },
+                onPressed: viewModel.weather == null
+                    ? null
+                    : () async {
+                        if (isFavorite) {
+                          await favViewModel
+                              .removeFavorite(viewModel.weather!.cityName);
+                        } else {
+                          await favViewModel
+                              .addFavorite(viewModel.weather!.cityName);
+                        }
+                      },
               );
             },
           ),
@@ -123,88 +132,256 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.blue.shade400.withOpacity(0.95),
+      backgroundColor: Colors.white,
       child: Consumer<FavoritesViewModel>(
         builder: (context, favViewModel, child) {
           return Column(
             children: [
-              const SizedBox(height: 80),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+              // Header Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(
+                    top: 60, bottom: 24, left: 24, right: 16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.blue.shade400,
+                      Colors.blue.shade600,
+                    ],
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white, size: 28),
-                      onPressed: () => Navigator.pop(context),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Icon(Icons.wb_sunny,
+                            color: Colors.white, size: 32),
+                        IconButton(
+                          icon: const Icon(Icons.close,
+                              color: Colors.white, size: 24),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Weather App',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Your daily forecast companion',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: favViewModel.favoriteCities.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No favorite cities yet',
-                          style: TextStyle(color: Colors.white70, fontSize: 16),
+
+              // Favorite Cities Section
+              if (favViewModel.favoriteCities.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.favorite,
+                          color: Colors.grey.shade600, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Favorite Cities',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1,
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount: favViewModel.favoriteCities.length,
-                        itemBuilder: (context, index) {
-                          final city = favViewModel.favoriteCities[index];
-                          return ListTile(
-                            leading: const Icon(Icons.location_on, color: Colors.white),
-                            title: Text(
-                              city,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            trailing: const Icon(Icons.cloud, color: Colors.white),
-                            onTap: () {
-                              Navigator.pop(context);
-                              Provider.of<HomeViewModel>(context, listen: false)
-                                  .fetchWeatherByCity(city);
-                            },
-                          );
-                        },
                       ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsScreen(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.3),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: const Icon(Icons.settings),
-                  label: const Text(
-                    'Settings',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ],
                   ),
                 ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: favViewModel.favoriteCities.length,
+                    itemBuilder: (context, index) {
+                      final city = favViewModel.favoriteCities[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          leading: Icon(Icons.location_on,
+                              color: Colors.blue.shade400, size: 22),
+                          title: Text(
+                            city,
+                            style: TextStyle(
+                              color: Colors.grey.shade800,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          trailing: Icon(Icons.arrow_forward_ios,
+                              color: Colors.grey.shade400, size: 16),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Provider.of<HomeViewModel>(context, listen: false)
+                                .fetchWeatherByCity(city);
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+
+              if (favViewModel.favoriteCities.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.favorite_border,
+                            color: Colors.grey.shade300, size: 48),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No favorite cities yet',
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              // Divider
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Divider(color: Colors.grey.shade200, thickness: 1),
               ),
-              const SizedBox(height: 20),
+
+              // Navigation Menu
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                child: Column(
+                  children: [
+                    _buildDrawerMenuItem(
+                      context,
+                      icon: Icons.calendar_today_outlined,
+                      title: '5-Day Forecast',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const DetailedForecastScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerMenuItem(
+                      context,
+                      icon: Icons.favorite_outline,
+                      title: 'Manage Favorites',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const FavoriteCitiesScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerMenuItem(
+                      context,
+                      icon: Icons.map_outlined,
+                      title: 'Weather Map',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const WeatherMapScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerMenuItem(
+                      context,
+                      icon: Icons.settings_outlined,
+                      title: 'Settings',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildDrawerMenuItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.grey.shade700, size: 22),
+                const SizedBox(width: 16),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.grey.shade800,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+                Icon(Icons.arrow_forward_ios,
+                    color: Colors.grey.shade300, size: 14),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -247,7 +424,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          
+
           // Main weather display
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              
+
               // Right side - Weather icon
               Column(
                 children: [
@@ -300,9 +477,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 30),
-          
+
           // Weather description card
           Container(
             padding: const EdgeInsets.all(20),
@@ -319,22 +496,22 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Hourly forecast section
           _buildHourlyForecast(viewModel),
-          
+
           const SizedBox(height: 24),
-          
+
           // UV Index card
           _buildUVIndexCard(),
-          
+
           const SizedBox(height: 24),
-          
+
           // Daily forecast
           _buildDailyForecast(viewModel),
-          
+
           const SizedBox(height: 24),
         ],
       ),
@@ -349,7 +526,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Get next 6 hourly forecasts (3-hour intervals)
     final hourlyItems = forecast.items.take(6).toList();
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -367,8 +544,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 final hour = item.dateTime.hour;
                 final minute = item.dateTime.minute;
                 final period = hour >= 12 ? 'pm' : 'am';
-                final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-                
+                final displayHour =
+                    hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+
                 return SizedBox(
                   width: 80,
                   child: Column(
@@ -400,9 +578,9 @@ class _HomeScreenState extends State<HomeScreen> {
               }),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Temperature graph line
           SizedBox(
             height: 60,
@@ -413,9 +591,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Rain percentage
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -427,7 +605,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.water_drop, color: Colors.white70, size: 16),
+                      const Icon(Icons.water_drop,
+                          color: Colors.white70, size: 16),
                       const SizedBox(width: 4),
                       Text(
                         '${(item.pop * 100).round()}%',
@@ -502,9 +681,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // Group by day and get daily summaries
-    final dailyForecasts = <String, List<dynamic>>{}; 
+    final dailyForecasts = <String, List<dynamic>>{};
     for (var item in forecast.items) {
-      final dateKey = '${item.dateTime.year}-${item.dateTime.month}-${item.dateTime.day}';
+      final dateKey =
+          '${item.dateTime.year}-${item.dateTime.month}-${item.dateTime.day}';
       if (!dailyForecasts.containsKey(dateKey)) {
         dailyForecasts[dateKey] = [];
       }
@@ -513,14 +693,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final days = dailyForecasts.keys.take(5).toList();
     final now = DateTime.now();
-    
+
     return Column(
       children: List.generate(days.length.clamp(0, 5), (index) {
         final dateKey = days[index];
         final items = dailyForecasts[dateKey]!;
         final firstItem = items[0];
         final date = firstItem.dateTime;
-        
+
         // Calculate day label
         String dayLabel;
         if (date.year == now.year && date.month == now.month) {
@@ -536,15 +716,16 @@ class _HomeScreenState extends State<HomeScreen> {
         } else {
           dayLabel = _getDayName(date.weekday);
         }
-        
+
         // Calculate max/min temps from all items in the day
         final temps = items.map((item) => item.temperature).toList();
         final maxTemp = temps.reduce((a, b) => a > b ? a : b);
         final minTemp = temps.reduce((a, b) => a < b ? a : b);
-        
+
         // Calculate average rain chance
-        final avgRain = items.map((item) => item.pop).reduce((a, b) => a + b) / items.length;
-        
+        final avgRain = items.map((item) => item.pop).reduce((a, b) => a + b) /
+            items.length;
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -603,7 +784,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _getDayName(int weekday) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
     return days[weekday - 1];
   }
 }
@@ -637,8 +826,11 @@ class _TemperatureGraphPainter extends CustomPainter {
 
     for (var i = 0; i < temperatures.length; i++) {
       final x = (size.width / (temperatures.length - 1)) * i;
-      final normalizedTemp = tempRange == 0 ? 0.5 : (temperatures[i] - minTemp) / tempRange;
-      final y = size.height - (normalizedTemp * size.height * 0.7) - size.height * 0.15;
+      final normalizedTemp =
+          tempRange == 0 ? 0.5 : (temperatures[i] - minTemp) / tempRange;
+      final y = size.height -
+          (normalizedTemp * size.height * 0.7) -
+          size.height * 0.15;
       points.add(Offset(x, y));
     }
 
@@ -671,7 +863,8 @@ class _SearchBottomSheet extends StatefulWidget {
 
 class _SearchBottomSheetState extends State<_SearchBottomSheet> {
   final TextEditingController _controller = TextEditingController();
-  final CityAutocompleteService _autocompleteService = CityAutocompleteService();
+  final CityAutocompleteService _autocompleteService =
+      CityAutocompleteService();
   List<dynamic> _suggestions = [];
   bool _isLoading = false;
 
@@ -786,7 +979,8 @@ class _SearchBottomSheetState extends State<_SearchBottomSheet> {
                   itemBuilder: (context, index) {
                     final city = _suggestions[index];
                     return ListTile(
-                      leading: const Icon(Icons.location_on, color: Colors.white),
+                      leading:
+                          const Icon(Icons.location_on, color: Colors.white),
                       title: Text(
                         city.name,
                         style: const TextStyle(

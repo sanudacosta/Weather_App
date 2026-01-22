@@ -1,35 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../shared/widgets/gradient_background.dart';
 import '../../../shared/widgets/weather_card.dart';
 import '../../../data/services/storage_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
-  
+
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final StorageService _storageService = StorageService();
-  bool _isDarkMode = false;
   bool _isCelsius = true;
-  
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
   }
-  
+
   Future<void> _loadSettings() async {
-    final isDark = await _storageService.isDarkMode();
     final isCelsius = await _storageService.isCelsius();
     setState(() {
-      _isDarkMode = isDark;
       _isCelsius = isCelsius;
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return GradientBackground(
@@ -67,29 +66,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text(
-                      'Dark Mode',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Enable dark theme',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 14,
-                      ),
-                    ),
-                    value: _isDarkMode,
-                    activeTrackColor: Colors.white,
-                    onChanged: (value) async {
-                      setState(() {
-                        _isDarkMode = value;
-                      });
-                      await _storageService.setThemeMode(value);
+                  Consumer<ThemeProvider>(
+                    builder: (context, themeProvider, child) {
+                      return SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text(
+                          'Dark Mode',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Enable dark theme',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 14,
+                          ),
+                        ),
+                        value: themeProvider.isDarkMode,
+                        activeTrackColor: Colors.white,
+                        onChanged: (value) {
+                          themeProvider.toggleTheme(value);
+                        },
+                      );
                     },
                   ),
                   const Divider(color: Colors.white24, height: 32),
