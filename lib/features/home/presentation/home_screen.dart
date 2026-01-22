@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/home_viewmodel.dart';
+import '../../forecast/presentation/forecast_screen.dart';
 import '../../../shared/widgets/gradient_background.dart';
 import '../../../shared/widgets/weather_card.dart';
 import '../../../shared/widgets/weather_info_tile.dart';
@@ -224,6 +225,44 @@ class _HomeScreenState extends State<HomeScreen> {
                   value: '${weather.pressure} hPa',
                 ),
               ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Forecast button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ForecastScreen(
+                      cityName: weather.cityName,
+                      weatherCondition: weather.weatherCondition,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.calendar_today),
+              label: const Text('5-Day Forecast'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1.5,
+                  ),
+                ),
+              ),
             ),
           ),
           
